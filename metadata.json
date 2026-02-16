@@ -1,0 +1,8 @@
+{
+  "name": "SoloTravel",
+  "description": "An AI-powered travel companion focusing on quiet luxury, intuitive itinerary management, and smart expense tracking.",
+  "requestFramePermissions": [
+    "geolocation",
+    "camera"
+  ]
+}

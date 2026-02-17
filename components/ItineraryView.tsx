@@ -331,9 +331,9 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ activities, onToggleCompl
 
             {/* View/Edit Modal */}
             {selectedActivity && (
-                <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
+                <div className="fixed inset-0 z-[60] flex items-center justify-center">
                     <div className="absolute inset-0 bg-pop-dark/80 backdrop-blur-sm" onClick={() => setSelectedActivity(null)}></div>
-                    <div className="relative bg-white w-full sm:w-[450px] max-h-[90vh] overflow-y-auto no-scrollbar rounded-t-3xl sm:rounded-2xl shadow-2xl animate-slide-up border-t-4 sm:border-4 border-pop-dark flex flex-col pb-32 sm:pb-0">
+                    <div className="relative bg-white w-full sm:w-[450px] max-h-[90vh] overflow-y-auto no-scrollbar rounded-2xl mx-4 shadow-2xl animate-slide-up border-t-4 sm:border-4 border-pop-dark flex flex-col pb-0">
 
                         {/* Modal Header */}
                         <div className="sticky top-0 bg-white z-20 border-b-2 border-gray-100 p-4 flex justify-between items-center">
@@ -352,7 +352,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ activities, onToggleCompl
                             </button>
                         </div>
 
-                        <div className="p-6 pb-32 space-y-6">
+                        <div className="p-6 space-y-6">
                             {isEditing ? (
                                 /* EDIT FORM */
                                 <div className="space-y-4">

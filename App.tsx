@@ -290,7 +290,7 @@ const App: React.FC = () => {
 
   return (
     <div className="h-screen w-full flex flex-col bg-blue-50 overflow-hidden relative font-sans">
-      <div className="flex-1 overflow-hidden relative z-0 pb-20">
+      <div className="flex-1 overflow-hidden relative pb-20">
         {view === 'itinerary' && (
           <ItineraryView
             activities={activities}

@@ -107,7 +107,7 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, onAddExpense,
     };
 
     return (
-        <div className="flex flex-col h-full bg-blue-50 animate-fade-in relative px-6 pt-8">
+        <div className="flex flex-col h-full bg-blue-50 relative px-6 pt-8">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-4xl font-black text-pop-dark tracking-tighter">SPEND</h2>
                 <div className="text-right">
@@ -211,9 +211,9 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, onAddExpense,
 
             {/* Add/Edit Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+                <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
                     <div className="absolute inset-0 bg-pop-dark/80 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
-                    <div className="relative bg-white w-full sm:w-[400px] rounded-t-3xl sm:rounded-2xl p-6 shadow-2xl animate-slide-up border-t-4 sm:border-4 border-pop-dark">
+                    <div className="relative bg-white w-full sm:w-[400px] rounded-t-3xl sm:rounded-2xl p-6 pb-40 sm:pb-6 shadow-2xl animate-slide-up border-t-4 sm:border-4 border-pop-dark overflow-y-auto no-scrollbar max-h-[90vh]">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-2xl font-black text-pop-dark uppercase tracking-tight">{editingId ? 'Edit Expense' : 'Add Expense'}</h3>
                             <button onClick={() => setIsModalOpen(false)} className="bg-white border-2 border-pop-dark p-2 rounded-lg hover:bg-gray-100 shadow-pop-sm active:shadow-none active:translate-y-1 transition-all">

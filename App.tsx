@@ -112,7 +112,13 @@ const App: React.FC = () => {
   };
 
   const handleUpdateActivity = (updated: Activity) => {
-    setActivities(prev => prev.map(a => a.id === updated.id ? updated : a));
+    setActivities(prev => {
+      const exists = prev.find(a => a.id === updated.id);
+      if (exists) {
+        return prev.map(a => a.id === updated.id ? updated : a);
+      }
+      return [...prev, updated];
+    });
   };
 
   const handleDeleteActivity = (id: string) => {
@@ -120,8 +126,8 @@ const App: React.FC = () => {
   };
 
   const handleUpdateItinerary = (newActivities: Activity[]) => {
-      // Append new activities
-      setActivities(prev => [...prev, ...newActivities]);
+    // Append new activities
+    setActivities(prev => [...prev, ...newActivities]);
   };
 
   // Expense Handlers
@@ -136,95 +142,157 @@ const App: React.FC = () => {
 
   // CSV Import Logic
   const parseCSVLine = (line: string): string[] => {
-      const values: string[] = [];
-      let current = '';
-      let inQuotes = false;
-      for (let i = 0; i < line.length; i++) {
-          const char = line[i];
-          if (char === '"') {
-              inQuotes = !inQuotes;
-          } else if (char === ',' && !inQuotes) {
-              values.push(current.trim());
-              current = '';
-          } else {
-              current += char;
-          }
+    const values: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        values.push(current.trim());
+        current = '';
+      } else {
+        current += char;
       }
-      values.push(current.trim());
-      return values;
+    }
+    values.push(current.trim());
+    return values;
   };
 
   const handleDownloadTemplate = () => {
-      const headers = ['Date', 'Time', 'Title', 'Description', 'Type', 'Cost', 'Address'];
-      const example = ['2023-10-25', '10:00', 'Kyoto Imperial Palace', 'Historical site visit', 'Sightseeing', '0', '3 Kyotogyoen, Kamigyo Ward, Kyoto'];
-      const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), example.join(',')].join('\n');
-      const encodedUri = encodeURI(csvContent);
-      const link = document.createElement("a");
-      link.setAttribute("href", encodedUri);
-      link.setAttribute("download", "itinerary_template.csv");
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    const headers = ['Date', 'Time', 'Title', 'Description', 'Type', 'Cost', 'Address'];
+    const example = ['2023-10-25', '10:00', 'Kyoto Imperial Palace', 'Historical site visit', 'Sightseeing', '0', '3 Kyotogyoen, Kamigyo Ward, Kyoto'];
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), example.join(',')].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "itinerary_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleImportCSV = () => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.csv';
-      
-      input.onchange = (e) => {
-          const file = (e.target as HTMLInputElement).files?.[0];
-          if (!file) return;
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
 
-          const reader = new FileReader();
-          reader.onload = (event) => {
-              const text = event.target?.result as string;
-              if (!text) return;
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
 
-              const lines = text.split('\n');
-              const startIndex = lines[0].toLowerCase().includes('date') ? 1 : 0;
-              
-              const newActivities: Activity[] = [];
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const text = event.target?.result as string;
+        if (!text) return;
 
-              for (let i = startIndex; i < lines.length; i++) {
-                  const line = lines[i].trim();
-                  if (!line) continue;
-                  
-                  const cols = parseCSVLine(line);
-                  if (cols.length < 3) continue;
+        const lines = text.split('\n');
+        const startIndex = lines[0].toLowerCase().includes('date') ? 1 : 0;
 
-                  const clean = (s: string) => s.replace(/^"|"$/g, '').trim();
+        const newActivities: Activity[] = [];
 
-                  newActivities.push({
-                      id: Math.random().toString(36).substr(2, 9),
-                      date: clean(cols[0]) || new Date().toISOString().split('T')[0],
-                      time: clean(cols[1]) || '00:00',
-                      title: clean(cols[2]) || 'New Activity',
-                      description: clean(cols[3]) || '',
-                      type: (clean(cols[4]) as ActivityType) || ActivityType.SIGHTSEEING,
-                      priceEstimate: parseFloat(cols[5]) || 0,
-                      address: clean(cols[6]) || '',
-                      isCompleted: false,
-                      currency: Currency.JPY,
-                      images: []
-                  });
-              }
+        for (let i = startIndex; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line) continue;
 
-              if (newActivities.length > 0) {
-                  setActivities(prev => [...prev, ...newActivities]);
-                  alert(`Imported ${newActivities.length} activities!`);
-              }
-          };
-          reader.readAsText(file);
+          const cols = parseCSVLine(line);
+          if (cols.length < 3) continue;
+
+          const clean = (s: string) => s.replace(/^"|"$/g, '').trim();
+
+          newActivities.push({
+            id: Math.random().toString(36).substr(2, 9),
+            date: clean(cols[0]) || new Date().toISOString().split('T')[0],
+            time: clean(cols[1]) || '00:00',
+            title: clean(cols[2]) || 'New Activity',
+            description: clean(cols[3]) || '',
+            type: (clean(cols[4]) as ActivityType) || ActivityType.SIGHTSEEING,
+            priceEstimate: parseFloat(cols[5]) || 0,
+            address: clean(cols[6]) || '',
+            isCompleted: false,
+            currency: Currency.JPY,
+            images: []
+          });
+        }
+
+        if (newActivities.length > 0) {
+          setActivities(newActivities); // OVERWRITE
+          alert(`Imported ${newActivities.length} activities!`);
+        }
       };
-      input.click();
+      reader.readAsText(file);
+    };
+    input.click();
+  };
+
+  const handleDownloadWalletTemplate = () => {
+    const headers = ['Type', 'Title', 'Date', 'Details', 'Notes'];
+    const example = ['Hotel', 'Ace Hotel Kyoto', 'Oct 24 - Oct 28', 'Standard King', 'Check-in 3PM'];
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), example.join(',')].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "wallet_template.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleImportWalletCSV = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
+
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const text = event.target?.result as string;
+        if (!text) return;
+
+        const lines = text.split('\n');
+        const startIndex = lines[0].toLowerCase().includes('type') ? 1 : 0;
+
+        const newTickets: Ticket[] = [];
+
+        for (let i = startIndex; i < lines.length; i++) {
+          const line = lines[i].trim();
+          if (!line) continue;
+
+          const cols = parseCSVLine(line);
+          if (cols.length < 2) continue;
+
+          const clean = (s: string) => s.replace(/^"|"$/g, '').trim();
+
+          newTickets.push({
+            id: Math.random().toString(36).substr(2, 9),
+            type: (clean(cols[0]) as any) || 'Event',
+            title: clean(cols[1]) || 'Ticket',
+            date: clean(cols[2]) || '',
+            details: clean(cols[3]) || '',
+            notes: clean(cols[4]) || '',
+            files: []
+          });
+        }
+
+        if (newTickets.length > 0) {
+          setTickets(newTickets); // OVERWRITE
+          alert(`Imported ${newTickets.length} items to Wallet!`);
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
   };
 
   return (
     <div className="h-screen w-full flex flex-col bg-blue-50 overflow-hidden relative font-sans">
       <div className="flex-1 overflow-hidden relative z-0 pb-20">
         {view === 'itinerary' && (
-          <ItineraryView 
+          <ItineraryView
             activities={activities}
             onToggleComplete={handleToggleComplete}
             onUpdateActivity={handleUpdateActivity}
@@ -236,45 +304,47 @@ const App: React.FC = () => {
         )}
         {view === 'map' && <MapView activities={activities} />}
         {view === 'expenses' && (
-            <ExpenseTracker 
-                expenses={expenses}
-                onAddExpense={handleAddExpense}
-                onUpdateExpense={handleUpdateExpense}
-                onDeleteExpense={handleDeleteExpense}
-            />
+          <ExpenseTracker
+            expenses={expenses}
+            onAddExpense={handleAddExpense}
+            onUpdateExpense={handleUpdateExpense}
+            onDeleteExpense={handleDeleteExpense}
+          />
         )}
         {view === 'wallet' && (
-            <Wallet 
-                tickets={tickets}
-                onAddTicket={handleAddTicket}
-                onUpdateTicket={handleUpdateTicket}
-                onDeleteTicket={handleDeleteTicket}
-                onPreviewImage={setPreviewImage}
-            />
+          <Wallet
+            tickets={tickets}
+            onAddTicket={handleAddTicket}
+            onUpdateTicket={handleUpdateTicket}
+            onDeleteTicket={handleDeleteTicket}
+            onPreviewImage={setPreviewImage}
+            onImportCSV={handleImportWalletCSV}
+            onDownloadTemplate={handleDownloadWalletTemplate}
+          />
         )}
       </div>
 
-      <Navigation 
-        currentView={view} 
-        setView={setView} 
-        onOpenAI={() => setIsAIChatOpen(true)} 
+      <Navigation
+        currentView={view}
+        setView={setView}
+        onOpenAI={() => setIsAIChatOpen(true)}
       />
 
-      <AIChat 
-        isOpen={isAIChatOpen} 
-        onClose={() => setIsAIChatOpen(false)} 
+      <AIChat
+        isOpen={isAIChatOpen}
+        onClose={() => setIsAIChatOpen(false)}
         itinerary={activities}
         onUpdateItinerary={handleUpdateItinerary}
       />
 
       {/* Fullscreen Image Preview */}
       {previewImage && (
-          <div className="fixed inset-0 z-[100] bg-pop-dark/95 flex items-center justify-center p-4 animate-fade-in" onClick={() => setPreviewImage(null)}>
-              <button className="absolute top-4 right-4 text-white p-3 rounded-xl border-2 border-white hover:bg-white hover:text-pop-dark transition-colors">
-                  <X size={24} strokeWidth={3} />
-              </button>
-              <img src={previewImage} className="max-w-full max-h-full object-contain rounded-xl border-4 border-white shadow-[0_0_40px_rgba(0,0,0,0.5)]" alt="Preview" />
-          </div>
+        <div className="fixed inset-0 z-[100] bg-pop-dark/95 flex items-center justify-center p-4 animate-fade-in" onClick={() => setPreviewImage(null)}>
+          <button className="absolute top-4 right-4 text-white p-3 rounded-xl border-2 border-white hover:bg-white hover:text-pop-dark transition-colors">
+            <X size={24} strokeWidth={3} />
+          </button>
+          <img src={previewImage} className="max-w-full max-h-full object-contain rounded-xl border-4 border-white shadow-[0_0_40px_rgba(0,0,0,0.5)]" alt="Preview" />
+        </div>
       )}
     </div>
   );

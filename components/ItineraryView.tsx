@@ -329,14 +329,14 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ activities, onToggleCompl
                 <Plus size={28} strokeWidth={3} />
             </button>
 
-            {/* View/Edit Modal */}
+            {/* View/Edit Modal - True Floating Modal */}
             {selectedActivity && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center">
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-pop-dark/80 backdrop-blur-sm" onClick={() => setSelectedActivity(null)}></div>
-                    <div className="relative bg-white w-full sm:w-[450px] max-h-[90vh] overflow-y-auto no-scrollbar rounded-2xl mx-4 shadow-2xl animate-slide-up border-t-4 sm:border-4 border-pop-dark flex flex-col pb-0">
+                    <div className="relative bg-white w-full max-w-[450px] max-h-[85vh] overflow-hidden rounded-[32px] shadow-[8px_8px_0px_0px_#18181b] animate-slide-up border-4 border-pop-dark flex flex-col">
 
-                        {/* Modal Header */}
-                        <div className="sticky top-0 bg-white z-20 border-b-2 border-gray-100 p-4 flex justify-between items-center">
+                        {/* Modal Header - Sticky */}
+                        <div className="sticky top-0 bg-white z-20 border-b-2 border-gray-100 p-4 px-6 flex justify-between items-center">
                             <div className="flex gap-2">
                                 {!isEditing && (
                                     <button onClick={() => setIsEditing(true)} className="p-2 rounded-lg hover:bg-gray-100 border-2 border-transparent hover:border-pop-dark transition-all">
@@ -352,10 +352,11 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ activities, onToggleCompl
                             </button>
                         </div>
 
-                        <div className="p-6 space-y-6">
+                        {/* Modal Body - Scrollable */}
+                        <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-6">
                             {isEditing ? (
                                 /* EDIT FORM */
-                                <div className="space-y-4">
+                                <div className="space-y-4 pb-20">
                                     <div>
                                         <label className="block text-xs text-gray-500 uppercase font-black tracking-wider mb-2">Title</label>
                                         <input
@@ -435,7 +436,6 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ activities, onToggleCompl
                                         </div>
                                     </div>
 
-                                    {/* Image Preview List in Edit Mode */}
                                     {editForm.images && editForm.images.length > 0 && (
                                         <div className="flex gap-2 overflow-x-auto py-2">
                                             {editForm.images.map((img, i) => (
@@ -451,17 +451,10 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ activities, onToggleCompl
                                             ))}
                                         </div>
                                     )}
-
-                                    <button
-                                        onClick={handleSaveEdit}
-                                        className="w-full bg-pop-blue text-white py-4 rounded-xl font-black uppercase tracking-wide border-2 border-pop-dark shadow-pop hover:-translate-y-1 active:translate-y-0 active:shadow-none transition-all mt-4 flex items-center justify-center gap-2"
-                                    >
-                                        <Save size={20} strokeWidth={3} /> Save Changes
-                                    </button>
                                 </div>
                             ) : (
                                 /* VIEW MODE */
-                                <>
+                                <div className="space-y-6">
                                     <div className="flex items-start justify-between">
                                         <div>
                                             <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border-2 border-pop-dark text-xs font-black uppercase mb-3 ${selectedActivity.isCompleted ? 'bg-gray-200 text-gray-500' : 'bg-pop-yellow text-pop-dark'
@@ -495,7 +488,6 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ activities, onToggleCompl
                                         </button>
                                     </div>
 
-                                    {/* Image Gallery */}
                                     {selectedActivity.images && selectedActivity.images.length > 0 && (
                                         <div>
                                             <p className="text-xs font-black text-gray-400 uppercase mb-2">Photos</p>
@@ -515,9 +507,21 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ activities, onToggleCompl
                                             </div>
                                         </div>
                                     )}
-                                </>
+                                </div>
                             )}
                         </div>
+
+                        {/* Modal Footer - Sticky with Gradient */}
+                        {isEditing && (
+                            <div className="absolute bottom-0 left-0 w-full p-4 px-6 bg-white/90 backdrop-blur-md border-t-2 border-gray-100 z-30">
+                                <button
+                                    onClick={handleSaveEdit}
+                                    className="w-full bg-pop-blue text-white py-4 rounded-[20px] font-black uppercase tracking-wide border-2 border-pop-dark shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 active:translate-y-0 active:shadow-none transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Save size={20} strokeWidth={3} /> Save Changes
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

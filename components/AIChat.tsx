@@ -57,12 +57,12 @@ const AIChat: React.FC<AIChatProps> = ({ isOpen, onClose, itinerary, onUpdateIti
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center pointer-events-none">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 pointer-events-none">
             {/* Backdrop */}
             <div className="absolute inset-0 bg-pop-dark/60 backdrop-blur-sm pointer-events-auto" onClick={onClose}></div>
 
-            {/* Chat Window */}
-            <div className="pointer-events-auto bg-white w-full sm:w-[400px] h-[80vh] sm:h-[600px] mx-4 rounded-[32px] shadow-2xl flex flex-col overflow-hidden animate-slide-up relative border-t-4 sm:border-4 border-pop-dark">
+            {/* Chat Window - True Floating Modal */}
+            <div className="pointer-events-auto bg-white w-full max-w-[400px] h-full max-h-[80vh] rounded-[32px] shadow-[8px_8px_0px_0px_#18181b] flex flex-col overflow-hidden animate-slide-up relative border-4 border-pop-dark">
 
                 {/* Header */}
                 <div className="p-6 bg-pop-blue border-b-4 border-pop-dark flex justify-between items-center">

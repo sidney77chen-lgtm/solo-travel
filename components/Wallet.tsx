@@ -274,19 +274,22 @@ const Wallet: React.FC<WalletProps> = ({ tickets, onAddTicket, onUpdateTicket, o
                 </div>
             )}
 
-            {/* Add/Edit Ticket Modal */}
+            {/* Add/Edit Ticket Modal - True Floating Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center">
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-pop-dark/80 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
-                    <div className="relative bg-white w-full sm:w-[400px] rounded-2xl mx-4 p-6 pb-6 shadow-2xl animate-slide-up border-t-4 sm:border-4 border-pop-dark max-h-[90vh] overflow-y-auto no-scrollbar">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-2xl font-black uppercase">{editingTicketId ? 'Edit Ticket' : 'Add Ticket'}</h3>
-                            <button onClick={() => setIsModalOpen(false)} className="bg-white border-2 border-pop-dark p-2 rounded-lg hover:bg-gray-100 shadow-pop-sm active:shadow-none active:translate-y-1 transition-all">
+                    <div className="relative bg-white w-full max-w-[400px] max-h-[85vh] overflow-hidden rounded-[32px] shadow-[8px_8px_0px_0px_#18181b] animate-slide-up border-4 border-pop-dark flex flex-col">
+
+                        {/* Sticky Header */}
+                        <div className="sticky top-0 bg-white z-20 border-b-2 border-gray-100 p-6 flex justify-between items-center">
+                            <h3 className="text-2xl font-black uppercase text-pop-dark">{editingTicketId ? 'Edit Ticket' : 'Add Ticket'}</h3>
+                            <button onClick={() => setIsModalOpen(false)} className="bg-white border-2 border-pop-dark p-2 rounded-lg hover:bg-gray-100 shadow-pop-sm active:shadow-none transition-all">
                                 <X size={20} className="text-pop-dark" strokeWidth={3} />
                             </button>
                         </div>
 
-                        <div className="space-y-4">
+                        {/* Scrollable Body */}
+                        <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-4 pb-24">
                             <div>
                                 <label className="block text-xs text-gray-500 uppercase font-black tracking-wider mb-2">Type</label>
                                 <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
@@ -311,7 +314,7 @@ const Wallet: React.FC<WalletProps> = ({ tickets, onAddTicket, onUpdateTicket, o
                                     type="text"
                                     value={title}
                                     onChange={e => setTitle(e.target.value)}
-                                    className="w-full bg-blue-50 p-3 rounded-xl border-2 border-pop-dark focus:bg-white focus:shadow-pop-sm outline-none font-bold text-pop-dark"
+                                    className="w-full bg-blue-50 p-4 rounded-xl border-2 border-pop-dark focus:bg-white focus:shadow-pop-sm outline-none text-lg font-black text-pop-dark placeholder:text-gray-300 transition-all"
                                     placeholder="e.g. Flight to Tokyo"
                                 />
                             </div>
@@ -321,7 +324,7 @@ const Wallet: React.FC<WalletProps> = ({ tickets, onAddTicket, onUpdateTicket, o
                                 <textarea
                                     value={details}
                                     onChange={e => setDetails(e.target.value)}
-                                    className="w-full bg-blue-50 p-3 rounded-xl border-2 border-pop-dark focus:bg-white focus:shadow-pop-sm outline-none font-medium text-pop-dark h-20 resize-none"
+                                    className="w-full bg-blue-50 p-4 rounded-xl border-2 border-pop-dark focus:bg-white focus:shadow-pop-sm outline-none font-medium text-pop-dark h-20 resize-none"
                                     placeholder="Seat numbers, booking ref, etc."
                                 />
                             </div>
@@ -331,7 +334,7 @@ const Wallet: React.FC<WalletProps> = ({ tickets, onAddTicket, onUpdateTicket, o
                                 <textarea
                                     value={notes}
                                     onChange={e => setNotes(e.target.value)}
-                                    className="w-full bg-blue-50 p-3 rounded-xl border-2 border-pop-dark focus:bg-white focus:shadow-pop-sm outline-none font-medium text-pop-dark h-20 resize-none"
+                                    className="w-full bg-blue-50 p-4 rounded-xl border-2 border-pop-dark focus:bg-white focus:shadow-pop-sm outline-none font-medium text-pop-dark h-20 resize-none"
                                     placeholder="Any personal reminders..."
                                 />
                             </div>
@@ -342,7 +345,7 @@ const Wallet: React.FC<WalletProps> = ({ tickets, onAddTicket, onUpdateTicket, o
                                     type="text"
                                     value={date}
                                     onChange={e => setDate(e.target.value)}
-                                    className="w-full bg-blue-50 p-3 rounded-xl border-2 border-pop-dark focus:bg-white focus:shadow-pop-sm outline-none font-bold text-pop-dark"
+                                    className="w-full bg-blue-50 p-4 rounded-xl border-2 border-pop-dark focus:bg-white focus:shadow-pop-sm outline-none font-bold text-pop-dark"
                                     placeholder="e.g. Oct 24, 14:00"
                                 />
                             </div>
@@ -379,21 +382,16 @@ const Wallet: React.FC<WalletProps> = ({ tickets, onAddTicket, onUpdateTicket, o
                                     </label>
                                 </div>
                             </div>
+                        </div>
 
+                        {/* Sticky Footer */}
+                        <div className="absolute bottom-0 left-0 w-full p-4 px-6 bg-white/90 backdrop-blur-md border-t-2 border-gray-100 z-30">
                             <button
                                 onClick={handleSave}
-                                className="w-full bg-pop-dark text-white py-4 rounded-xl font-black uppercase tracking-wide border-2 border-transparent hover:border-white shadow-lg hover:shadow-pop transition-all mt-2"
+                                className="w-full bg-pop-green text-pop-dark py-4 rounded-[20px] font-black text-lg border-2 border-pop-dark shadow-[4px_4px_0px_0px_#18181b] hover:-translate-y-1 active:translate-y-0 active:shadow-none transition-all flex items-center justify-center gap-2 uppercase tracking-wide"
                             >
-                                {editingTicketId ? 'Save Changes' : 'Add to Wallet'}
+                                <Plus size={20} strokeWidth={3} /> {editingTicketId ? 'Save Changes' : 'Add to Wallet'}
                             </button>
-                            {editingTicketId && (
-                                <button
-                                    onClick={handleDeleteCurrent}
-                                    className="w-full mt-2 bg-white border-2 border-red-500 text-red-500 py-4 rounded-xl font-black uppercase hover:bg-red-50 transition-colors"
-                                >
-                                    Delete Ticket
-                                </button>
-                            )}
                         </div>
                     </div>
                 </div>

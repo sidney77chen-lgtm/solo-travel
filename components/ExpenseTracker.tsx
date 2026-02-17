@@ -118,87 +118,90 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, onAddExpense,
 
             <ExchangeRateWidget />
 
-            {/* Chart Section */}
-            {expenses.length > 0 ? (
-                <div className="bg-white p-6 rounded-2xl shadow-pop border-2 border-pop-dark mb-6 flex flex-col items-center relative">
-                    <div className="absolute top-4 left-4 bg-pop-yellow px-2 py-1 rounded border-2 border-pop-dark text-[10px] font-black uppercase">Analytics</div>
-                    <div className="w-full h-48">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={chartData}
-                                    cx="50%"
-                                    cy="50%"
-                                    innerRadius={60}
-                                    outerRadius={80}
-                                    paddingAngle={5}
-                                    dataKey="value"
-                                    stroke="#18181b"
-                                    strokeWidth={2}
-                                >
-                                    {chartData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <Tooltip
-                                    contentStyle={{ borderRadius: '8px', border: '2px solid #18181b', boxShadow: '4px 4px 0px 0px #18181b', fontWeight: 'bold' }}
-                                    itemStyle={{ color: '#18181b', fontSize: '12px', textTransform: 'uppercase', fontWeight: 900 }}
-                                />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
-                    <div className="flex flex-wrap justify-center gap-3 mt-4">
-                        {chartData.map((entry, index) => (
-                            <div key={entry.name} className="flex items-center gap-1.5">
-                                <div className="w-3 h-3 rounded-full border border-pop-dark shadow-[1px_1px_0px_0px_#000]" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                                <span className="text-[10px] text-pop-dark uppercase font-black">{entry.name}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            ) : (
-                <div className="bg-white p-6 rounded-2xl shadow-pop border-2 border-pop-dark mb-6 text-center">
-                    <p className="text-gray-400 font-bold">No expenses yet. Start spending!</p>
-                </div>
-            )}
-
-            {/* Transaction List */}
+            {/* Transaction List with Integrated Chart */}
             <div className="flex-1 overflow-y-auto no-scrollbar pb-24 space-y-3">
-                <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Recent Transactions</h3>
-                {expenses.map((expense) => (
-                    <div
-                        key={expense.id}
-                        className="bg-white p-4 rounded-xl border-2 border-pop-dark shadow-pop flex items-center justify-between group cursor-pointer hover:shadow-none transition-all h-full relative"
-                        onClick={() => handleOpenEdit(expense)}
-                    >
-                        <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-lg bg-blue-50 border-2 border-pop-dark flex items-center justify-center text-pop-dark group-hover:bg-pop-yellow transition-colors">
-                                {expense.category === ActivityType.FOOD && <TrendingUp size={20} strokeWidth={2.5} />}
-                                {expense.category === ActivityType.TRANSPORT && <Wallet size={20} strokeWidth={2.5} />}
-                                {expense.category === ActivityType.SIGHTSEEING && <Tag size={20} strokeWidth={2.5} />}
-                                {![ActivityType.FOOD, ActivityType.TRANSPORT, ActivityType.SIGHTSEEING].includes(expense.category) && <DollarSign size={20} strokeWidth={2.5} />}
-                            </div>
-                            <div>
-                                <p className="font-bold text-pop-dark text-lg leading-none mb-1">{expense.description}</p>
-                                <p className="text-[10px] font-bold text-gray-400 uppercase">{expense.date} • {expense.category}</p>
-                            </div>
+
+                {/* Chart Section - Now Integrated into List */}
+                {expenses.length > 0 && (
+                    <div className="bg-white p-6 rounded-2xl shadow-pop border-2 border-pop-dark mb-8 flex flex-col items-center relative animate-fade-in mx-1">
+                        <div className="absolute top-4 left-4 bg-pop-yellow px-2 py-1 rounded border-2 border-pop-dark text-[10px] font-black uppercase">Analytics</div>
+                        <div className="w-full h-48">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={chartData}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={60}
+                                        outerRadius={80}
+                                        paddingAngle={5}
+                                        dataKey="value"
+                                        stroke="#18181b"
+                                        strokeWidth={2}
+                                    >
+                                        {chartData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip
+                                        contentStyle={{ borderRadius: '8px', border: '2px solid #18181b', boxShadow: '4px 4px 0px 0px #18181b', fontWeight: 'bold' }}
+                                        itemStyle={{ color: '#18181b', fontSize: '12px', textTransform: 'uppercase', fontWeight: 900 }}
+                                    />
+                                </PieChart>
+                            </ResponsiveContainer>
                         </div>
-                        <div className="flex items-center gap-3 relative z-10">
-                            <span className="font-black text-pop-blue text-lg">¥{expense.amount.toLocaleString()}</span>
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setDeleteConfirmationId(expense.id);
-                                }}
-                                className="p-2 hover:bg-red-100 rounded-full transition-colors group/delete relative z-20"
-                                title="Delete Expense"
-                            >
-                                <Trash2 size={18} className="text-gray-300 group-hover/delete:text-red-500 transition-colors pointer-events-none" strokeWidth={3} />
-                            </button>
-                            <Edit2 size={16} className="text-gray-300 group-hover:text-pop-dark transition-colors" strokeWidth={3} />
+                        <div className="flex flex-wrap justify-center gap-3 mt-4">
+                            {chartData.map((entry, index) => (
+                                <div key={entry.name} className="flex items-center gap-1.5">
+                                    <div className="w-3 h-3 rounded-full border border-pop-dark shadow-[1px_1px_0px_0px_#000]" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                                    <span className="text-[10px] text-pop-dark uppercase font-black">{entry.name}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
-                ))}
+                )}
+
+                <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-2 px-1">Recent Transactions</h3>
+                {expenses.length === 0 ? (
+                    <div className="bg-white p-6 rounded-2xl shadow-pop border-2 border-pop-dark mb-6 text-center mx-1">
+                        <p className="text-gray-400 font-bold">No expenses yet. Start spending!</p>
+                    </div>
+                ) : (
+                    expenses.map((expense) => (
+                        <div
+                            key={expense.id}
+                            className="bg-white p-4 rounded-xl border-2 border-pop-dark shadow-pop flex items-center justify-between group cursor-pointer hover:shadow-none transition-all h-full relative mx-1"
+                            onClick={() => handleOpenEdit(expense)}
+                        >
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-lg bg-blue-50 border-2 border-pop-dark flex items-center justify-center text-pop-dark group-hover:bg-pop-yellow transition-colors">
+                                    {expense.category === ActivityType.FOOD && <TrendingUp size={20} strokeWidth={2.5} />}
+                                    {expense.category === ActivityType.TRANSPORT && <Wallet size={20} strokeWidth={2.5} />}
+                                    {expense.category === ActivityType.SIGHTSEEING && <Tag size={20} strokeWidth={2.5} />}
+                                    {![ActivityType.FOOD, ActivityType.TRANSPORT, ActivityType.SIGHTSEEING].includes(expense.category) && <DollarSign size={20} strokeWidth={2.5} />}
+                                </div>
+                                <div>
+                                    <p className="font-bold text-pop-dark text-lg leading-none mb-1">{expense.description}</p>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase">{expense.date} • {expense.category}</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 relative z-10">
+                                <span className="font-black text-pop-blue text-lg">¥{expense.amount.toLocaleString()}</span>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setDeleteConfirmationId(expense.id);
+                                    }}
+                                    className="p-2 hover:bg-red-100 rounded-full transition-colors group/delete relative z-20"
+                                    title="Delete Expense"
+                                >
+                                    <Trash2 size={18} className="text-gray-300 group-hover/delete:text-red-500 transition-colors pointer-events-none" strokeWidth={3} />
+                                </button>
+                                <Edit2 size={16} className="text-gray-300 group-hover:text-pop-dark transition-colors" strokeWidth={3} />
+                            </div>
+                        </div>
+                    )
+                    ))}
             </div>
 
             {/* FAB */}
@@ -209,19 +212,22 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, onAddExpense,
                 <Plus size={28} strokeWidth={3} />
             </button>
 
-            {/* Add/Edit Modal */}
+            {/* Add/Edit Modal - True Floating Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center">
+                <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-pop-dark/80 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
-                    <div className="relative bg-white w-full sm:w-[400px] rounded-2xl mx-4 p-6 pb-6 shadow-2xl animate-slide-up border-t-4 sm:border-4 border-pop-dark overflow-y-auto no-scrollbar max-h-[90vh]">
-                        <div className="flex justify-between items-center mb-6">
+                    <div className="relative bg-white w-full max-w-[400px] max-h-[85vh] overflow-hidden rounded-[32px] shadow-[8px_8px_0px_0px_#18181b] animate-slide-up border-4 border-pop-dark flex flex-col">
+
+                        {/* Sticky Header */}
+                        <div className="sticky top-0 bg-white z-20 border-b-2 border-gray-100 p-6 flex justify-between items-center">
                             <h3 className="text-2xl font-black text-pop-dark uppercase tracking-tight">{editingId ? 'Edit Expense' : 'Add Expense'}</h3>
-                            <button onClick={() => setIsModalOpen(false)} className="bg-white border-2 border-pop-dark p-2 rounded-lg hover:bg-gray-100 shadow-pop-sm active:shadow-none active:translate-y-1 transition-all">
+                            <button onClick={() => setIsModalOpen(false)} className="bg-white border-2 border-pop-dark p-2 rounded-lg hover:bg-gray-100 shadow-pop-sm active:shadow-none transition-all">
                                 <X size={20} className="text-pop-dark" strokeWidth={3} />
                             </button>
                         </div>
 
-                        <div className="space-y-4">
+                        {/* Scrollable Body */}
+                        <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-4 pb-24">
                             <div>
                                 <label className="block text-xs text-gray-500 uppercase font-black tracking-wider mb-2">Amount (JPY)</label>
                                 <div className="relative">
@@ -260,7 +266,7 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, onAddExpense,
                                             type="date"
                                             value={date}
                                             onChange={e => setDate(e.target.value)}
-                                            className="bg-transparent flex-1 outline-none text-pop-dark font-bold text-sm uppercase"
+                                            className="bg-transparent flex-1 outline-none text-pop-dark font-bold text-xs uppercase"
                                         />
                                     </div>
                                 </div>
@@ -280,10 +286,13 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, onAddExpense,
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
+                        {/* Sticky Footer */}
+                        <div className="absolute bottom-0 left-0 w-full p-4 px-6 bg-white/90 backdrop-blur-md border-t-2 border-gray-100 z-30">
                             <button
                                 onClick={handleSubmit}
-                                className="w-full bg-pop-blue text-white py-4 rounded-xl font-black text-lg border-2 border-pop-dark shadow-pop hover:-translate-y-1 hover:shadow-pop-hover active:translate-y-0 active:shadow-none transition-all mt-4 flex items-center justify-center gap-2 uppercase tracking-wide"
+                                className="w-full bg-pop-blue text-white py-4 rounded-[20px] font-black text-lg border-2 border-pop-dark shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 active:translate-y-0 active:shadow-none transition-all flex items-center justify-center gap-2 uppercase tracking-wide"
                             >
                                 {editingId ? <Save size={20} strokeWidth={3} /> : <Plus size={20} strokeWidth={3} />}
                                 {editingId ? 'Save Changes' : 'Add Expense'}
@@ -297,7 +306,7 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, onAddExpense,
             {deleteConfirmationId && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
                     <div className="absolute inset-0 bg-pop-dark/80 backdrop-blur-sm" onClick={() => setDeleteConfirmationId(null)}></div>
-                    <div className="relative bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-fade-in border-4 border-pop-dark text-center">
+                    <div className="relative bg-white w-full max-w-sm rounded-[32px] p-6 shadow-2xl animate-fade-in border-4 border-pop-dark text-center">
                         <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4 border-2 border-pop-dark">
                             <Trash2 size={32} className="text-red-500" strokeWidth={3} />
                         </div>

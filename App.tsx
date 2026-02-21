@@ -114,9 +114,9 @@ const App: React.FC = () => {
       setIsLoading(true);
       const data = await sheetsService.fetchAllData();
       if (data) {
-        if (data.plane && data.plane.length > 0) setActivities(data.plane);
-        if (data.spend && data.spend.length > 0) setExpenses(data.spend);
-        if (data.wallet && data.wallet.length > 0) setTickets(data.wallet);
+        if (data.plane) setActivities(data.plane);
+        if (data.spend) setExpenses(data.spend);
+        if (data.wallet) setTickets(data.wallet);
       }
       setIsLoading(false);
     };

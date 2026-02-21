@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Expense, ActivityType, Currency } from '../types';
+import { APP_CONFIG } from '../src/config';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Plus, Wallet, TrendingUp, Calendar, Tag, AlignLeft, DollarSign, RefreshCcw, X, Edit2, Save, Trash2 } from 'lucide-react';
 
@@ -21,8 +22,8 @@ const ExchangeRateWidget = () => (
                 Live Rate <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse border border-white"></span>
             </p>
             <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black tracking-tighter">149.50</span>
-                <span className="text-sm font-bold text-gray-400">JPY / USD</span>
+                <span className="text-3xl font-black tracking-tighter">{APP_CONFIG.MOCK_EXCHANGE_RATE.toFixed(2)}</span>
+                <span className="text-sm font-bold text-gray-400">{APP_CONFIG.EXCHANGE_PAIR}</span>
             </div>
             <p className="text-[10px] font-bold text-gray-500 mt-1 uppercase">Updated 2 mins ago</p>
         </div>
@@ -36,6 +37,12 @@ const ExchangeRateWidget = () => (
         </div>
     </div>
 );
+
+const formatDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
 
 const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, onAddExpense, onUpdateExpense, onDeleteExpense }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -112,7 +119,7 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, onAddExpense,
                 <h2 className="text-4xl font-black text-pop-dark tracking-tighter">SPEND</h2>
                 <div className="text-right">
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total Spent</p>
-                    <p className="text-3xl font-black text-pop-blue tracking-tighter">¥{totalSpent.toLocaleString()}</p>
+                    <p className="text-3xl font-black text-pop-blue tracking-tighter">{APP_CONFIG.CURRENCY_SYMBOL}{totalSpent.toLocaleString()}</p>
                 </div>
             </div>
 
@@ -170,11 +177,11 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, onAddExpense,
                     expenses.map((expense) => (
                         <div
                             key={expense.id}
-                            className="bg-white p-4 rounded-xl border-2 border-pop-dark shadow-pop flex items-center justify-between group cursor-pointer hover:shadow-none transition-all h-full relative mx-1"
+                            className="bg-white p-2 px-4 rounded-xl border-2 border-pop-dark shadow-pop flex items-center justify-between group cursor-pointer hover:shadow-none transition-all relative mx-1"
                             onClick={() => handleOpenEdit(expense)}
                         >
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-lg bg-blue-50 border-2 border-pop-dark flex items-center justify-center text-pop-dark group-hover:bg-pop-yellow transition-colors">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-blue-50 border-2 border-pop-dark flex items-center justify-center text-pop-dark group-hover:bg-pop-yellow transition-colors shrink-0">
                                     {expense.category === ActivityType.FOOD && <TrendingUp size={20} strokeWidth={2.5} />}
                                     {expense.category === ActivityType.TRANSPORT && <Wallet size={20} strokeWidth={2.5} />}
                                     {expense.category === ActivityType.SIGHTSEEING && <Tag size={20} strokeWidth={2.5} />}
@@ -182,11 +189,11 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, onAddExpense,
                                 </div>
                                 <div>
                                     <p className="font-bold text-pop-dark text-lg leading-none mb-1">{expense.description}</p>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase">{expense.date} • {expense.category}</p>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase">{formatDate(expense.date)} • {expense.category}</p>
                                 </div>
                             </div>
                             <div className="flex items-center gap-3 relative z-10">
-                                <span className="font-black text-pop-blue text-lg">¥{expense.amount.toLocaleString()}</span>
+                                <span className="font-black text-pop-blue text-lg">{APP_CONFIG.CURRENCY_SYMBOL}{expense.amount.toLocaleString()}</span>
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -229,9 +236,9 @@ const ExpenseTracker: React.FC<ExpenseTrackerProps> = ({ expenses, onAddExpense,
                         {/* Scrollable Body */}
                         <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-4 pb-24">
                             <div>
-                                <label className="block text-xs text-gray-500 uppercase font-black tracking-wider mb-2">Amount (JPY)</label>
+                                <label className="block text-xs text-gray-500 uppercase font-black tracking-wider mb-2">Amount ({APP_CONFIG.BASE_CURRENCY})</label>
                                 <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-pop-dark font-black text-xl">¥</span>
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-pop-dark font-black text-xl">{APP_CONFIG.CURRENCY_SYMBOL}</span>
                                     <input
                                         type="number"
                                         value={amount}

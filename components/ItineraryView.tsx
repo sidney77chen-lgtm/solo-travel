@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Activity, ActivityType, Currency } from '../types';
-import { MapPin, Utensils, Train, Camera, BedDouble, CheckCircle2, Circle, X, Navigation, StickyNote, Clock as ClockIcon, CloudSun, Edit2, Save, Image as ImageIcon, Trash2, Maximize2, Plus, FileUp, Download } from 'lucide-react';
+import { APP_CONFIG } from '../src/config';
+import { MapPin, Utensils, Train, Camera, BedDouble, CheckCircle2, Circle, X, Navigation, StickyNote, Clock as ClockIcon, CloudSun, Edit2, Save, ImageIcon, Trash2, Maximize2, Plus, FileUp, Download } from 'lucide-react';
 import SwipeableItem from './SwipeableItem';
 
 interface ItineraryViewProps {
@@ -9,8 +10,6 @@ interface ItineraryViewProps {
     onUpdateActivity: (activity: Activity) => void;
     onDeleteActivity: (id: string) => void;
     onPreviewImage: (url: string) => void;
-    onImportCSV: () => void;
-    onDownloadTemplate: () => void;
 }
 
 const getActivityIcon = (type: ActivityType) => {
@@ -35,10 +34,27 @@ const LiveClock = () => {
         <div className="text-right">
             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Local Time</p>
             <p className="text-2xl font-black text-pop-blue tracking-tighter leading-none">
-                {time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {time.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase()}
             </p>
         </div>
     );
+};
+
+const formatTime = (timeStr: string) => {
+    if (!timeStr) return '';
+
+    // Handle ISO strings from Google Sheets (e.g. 1899-12-30T01:00:00.000Z)
+    if (timeStr.includes('T')) {
+        const date = new Date(timeStr);
+        return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase();
+    }
+
+    // Handle HH:mm strings
+    const [hours, minutes] = timeStr.split(':');
+    const h = parseInt(hours, 10);
+    const ampm = h >= 12 ? 'pm' : 'am';
+    const displayH = h % 12 || 12;
+    return `${ampm} ${displayH}:${minutes}`;
 };
 
 const getWeatherForDate = (date: string) => {
@@ -67,7 +83,7 @@ const WeatherWidget: React.FC<{ date: string }> = ({ date }) => {
             <div className="z-10">
                 <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-black text-pop-dark">{temp}°C</span>
-                    <span className="text-sm font-bold text-gray-500 uppercase">Kyoto</span>
+                    <span className="text-sm font-bold text-gray-500 uppercase">{APP_CONFIG.DESTINATION}</span>
                 </div>
                 <p className="text-xs font-bold text-pop-blue uppercase tracking-wide">{label}</p>
             </div>
@@ -75,7 +91,7 @@ const WeatherWidget: React.FC<{ date: string }> = ({ date }) => {
     );
 };
 
-const ItineraryView: React.FC<ItineraryViewProps> = ({ activities, onToggleComplete, onUpdateActivity, onDeleteActivity, onPreviewImage, onImportCSV, onDownloadTemplate }) => {
+const ItineraryView: React.FC<ItineraryViewProps> = ({ activities, onToggleComplete, onUpdateActivity, onDeleteActivity, onPreviewImage }) => {
     const [selectedDate, setSelectedDate] = useState<string>('');
     const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
     const [isEditing, setIsEditing] = useState(false);
@@ -137,7 +153,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ activities, onToggleCompl
             description: '',
             type: ActivityType.SIGHTSEEING,
             isCompleted: false,
-            currency: Currency.JPY,
+            currency: Currency.JPY, // This will be visually overridden by UI config symbols
             priceEstimate: 0,
             images: []
         };
@@ -192,20 +208,6 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ activities, onToggleCompl
                 <div className="flex justify-between items-start mb-6">
                     <div>
                         <h2 className="text-4xl font-black text-pop-dark tracking-tighter">PLAN</h2>
-                        <div className="flex gap-2 mt-2">
-                            <button
-                                onClick={onDownloadTemplate}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-pop-dark rounded-lg text-xs font-bold hover:bg-pop-yellow transition-colors shadow-pop-sm active:translate-y-0.5 active:shadow-none"
-                            >
-                                <Download size={14} strokeWidth={2.5} /> Template
-                            </button>
-                            <button
-                                onClick={onImportCSV}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-pop-dark rounded-lg text-xs font-bold hover:bg-pop-blue hover:text-white transition-colors shadow-pop-sm active:translate-y-0.5 active:shadow-none"
-                            >
-                                <FileUp size={14} strokeWidth={2.5} /> Import
-                            </button>
-                        </div>
                     </div>
                     {/* Clock moved to header */}
                     <LiveClock />
@@ -267,7 +269,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ activities, onToggleCompl
                                 <div className="flex items-start gap-4 relative z-10">
                                     {/* Time Bubble */}
                                     <div className="flex flex-col items-center min-w-[50px] pt-1">
-                                        <span className="text-sm font-black text-pop-dark">{activity.time}</span>
+                                        <span className="text-xs font-black text-pop-dark whitespace-nowrap">{formatTime(activity.time)}</span>
                                         <div className={`w-3 h-3 rounded-full border-2 border-pop-dark mt-1 ${activity.isCompleted ? 'bg-pop-blue' : 'bg-pop-yellow'}`}></div>
                                     </div>
 
@@ -309,7 +311,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ activities, onToggleCompl
 
                                             {activity.priceEstimate && activity.priceEstimate > 0 && (
                                                 <div className="mt-3 inline-block px-2 py-1 bg-blue-50 rounded border border-pop-dark text-xs font-black text-pop-dark">
-                                                    ¥{activity.priceEstimate.toLocaleString()}
+                                                    {APP_CONFIG.CURRENCY_SYMBOL}{activity.priceEstimate.toLocaleString()}
                                                 </div>
                                             )}
                                         </div>
@@ -464,7 +466,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ activities, onToggleCompl
                                             <h2 className="text-3xl font-black text-pop-dark leading-tight mb-2">{selectedActivity.title}</h2>
                                             <div className="flex items-center gap-2 text-gray-500 font-bold uppercase text-sm">
                                                 <ClockIcon size={16} strokeWidth={2.5} />
-                                                {selectedActivity.time}
+                                                {formatTime(selectedActivity.time)}
                                             </div>
                                         </div>
                                     </div>
@@ -477,7 +479,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ activities, onToggleCompl
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="bg-white p-3 rounded-xl border-2 border-pop-dark shadow-sm">
                                             <p className="text-[10px] font-black text-gray-400 uppercase">Estimated Cost</p>
-                                            <p className="text-xl font-black text-pop-dark">¥{selectedActivity.priceEstimate?.toLocaleString() || 0}</p>
+                                            <p className="text-xl font-black text-pop-dark">{APP_CONFIG.CURRENCY_SYMBOL}{selectedActivity.priceEstimate?.toLocaleString() || 0}</p>
                                         </div>
                                         <button
                                             onClick={() => openGoogleMaps(selectedActivity)}

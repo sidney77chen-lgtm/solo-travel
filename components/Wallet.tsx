@@ -9,11 +9,9 @@ interface WalletProps {
     onUpdateTicket: (ticket: Ticket) => void;
     onDeleteTicket: (id: string) => void;
     onPreviewImage: (url: string) => void;
-    onImportCSV: () => void;
-    onDownloadTemplate: () => void;
 }
 
-const Wallet: React.FC<WalletProps> = ({ tickets, onAddTicket, onUpdateTicket, onDeleteTicket, onPreviewImage, onImportCSV, onDownloadTemplate }) => {
+const Wallet: React.FC<WalletProps> = ({ tickets, onAddTicket, onUpdateTicket, onDeleteTicket, onPreviewImage }) => {
     const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingTicketId, setEditingTicketId] = useState<string | null>(null);
@@ -117,20 +115,6 @@ const Wallet: React.FC<WalletProps> = ({ tickets, onAddTicket, onUpdateTicket, o
             <div className="flex justify-between items-start mb-6">
                 <div>
                     <h2 className="text-4xl font-black text-pop-dark tracking-tighter">WALLET</h2>
-                    <div className="flex gap-2 mt-2">
-                        <button
-                            onClick={onDownloadTemplate}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-pop-dark rounded-lg text-xs font-bold hover:bg-pop-yellow transition-colors shadow-pop-sm active:translate-y-0.5 active:shadow-none"
-                        >
-                            <Download size={14} strokeWidth={2.5} /> Template
-                        </button>
-                        <button
-                            onClick={onImportCSV}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white border-2 border-pop-dark rounded-lg text-xs font-bold hover:bg-pop-blue hover:text-white transition-colors shadow-pop-sm active:translate-y-0.5 active:shadow-none"
-                        >
-                            <FileUp size={14} strokeWidth={2.5} /> Import
-                        </button>
-                    </div>
                 </div>
                 <div className="text-right">
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Digital Pass</p>

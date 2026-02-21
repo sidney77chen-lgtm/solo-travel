@@ -6,7 +6,8 @@ import ExpenseTracker from './components/ExpenseTracker';
 import Wallet from './components/Wallet';
 import MapView from './components/MapView';
 import AIChat from './components/AIChat';
-import { X } from 'lucide-react';
+import { X, CloudSync, Loader2 } from 'lucide-react';
+import { sheetsService } from './services/sheetsService';
 
 // Mock Data
 const INITIAL_ACTIVITIES: Activity[] = [
@@ -104,16 +105,39 @@ const App: React.FC = () => {
   const [tickets, setTickets] = useState<Ticket[]>(INITIAL_TICKETS);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // --- Sync Effects ---
+  React.useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      const data = await sheetsService.fetchAllData();
+      if (data) {
+        if (data.plane && data.plane.length > 0) setActivities(data.plane);
+        if (data.spend && data.spend.length > 0) setExpenses(data.spend);
+        if (data.wallet && data.wallet.length > 0) setTickets(data.wallet);
+      }
+      setIsLoading(false);
+    };
+    loadData();
+  }, []);
 
   // --- Handlers ---
 
   const handleToggleComplete = (id: string) => {
-    setActivities(prev => prev.map(a => a.id === id ? { ...a, isCompleted: !a.isCompleted } : a));
+    setActivities(prev => {
+      const updated = prev.map(a => a.id === id ? { ...a, isCompleted: !a.isCompleted } : a);
+      const item = updated.find(a => a.id === id);
+      if (item) sheetsService.syncItem('plane', 'set', item);
+      return updated;
+    });
   };
 
   const handleUpdateActivity = (updated: Activity) => {
     setActivities(prev => {
       const exists = prev.find(a => a.id === updated.id);
+      sheetsService.syncItem('plane', 'set', updated);
       if (exists) {
         return prev.map(a => a.id === updated.id ? updated : a);
       }
@@ -123,6 +147,7 @@ const App: React.FC = () => {
 
   const handleDeleteActivity = (id: string) => {
     setActivities(prev => prev.filter(a => a.id !== id));
+    sheetsService.syncItem('plane', 'delete', { id });
   };
 
   const handleUpdateItinerary = (newActivities: Activity[]) => {
@@ -131,14 +156,32 @@ const App: React.FC = () => {
   };
 
   // Expense Handlers
-  const handleAddExpense = (expense: Expense) => setExpenses(prev => [expense, ...prev]);
-  const handleUpdateExpense = (expense: Expense) => setExpenses(prev => prev.map(e => e.id === expense.id ? expense : e));
-  const handleDeleteExpense = (id: string) => setExpenses(prev => prev.filter(e => e.id !== id));
+  const handleAddExpense = (expense: Expense) => {
+    setExpenses(prev => [expense, ...prev]);
+    sheetsService.syncItem('spend', 'set', expense);
+  };
+  const handleUpdateExpense = (expense: Expense) => {
+    setExpenses(prev => prev.map(e => e.id === expense.id ? expense : e));
+    sheetsService.syncItem('spend', 'set', expense);
+  };
+  const handleDeleteExpense = (id: string) => {
+    setExpenses(prev => prev.filter(e => e.id !== id));
+    sheetsService.syncItem('spend', 'delete', { id });
+  };
 
   // Wallet Handlers
-  const handleAddTicket = (ticket: Ticket) => setTickets(prev => [ticket, ...prev]);
-  const handleUpdateTicket = (ticket: Ticket) => setTickets(prev => prev.map(t => t.id === ticket.id ? ticket : t));
-  const handleDeleteTicket = (id: string) => setTickets(prev => prev.filter(t => t.id !== id));
+  const handleAddTicket = (ticket: Ticket) => {
+    setTickets(prev => [ticket, ...prev]);
+    sheetsService.syncItem('wallet', 'set', ticket);
+  };
+  const handleUpdateTicket = (ticket: Ticket) => {
+    setTickets(prev => prev.map(t => t.id === ticket.id ? ticket : t));
+    sheetsService.syncItem('wallet', 'set', ticket);
+  };
+  const handleDeleteTicket = (id: string) => {
+    setTickets(prev => prev.filter(t => t.id !== id));
+    sheetsService.syncItem('wallet', 'delete', { id });
+  };
 
   // CSV Import Logic
   const parseCSVLine = (line: string): string[] => {
@@ -298,8 +341,6 @@ const App: React.FC = () => {
             onUpdateActivity={handleUpdateActivity}
             onDeleteActivity={handleDeleteActivity}
             onPreviewImage={setPreviewImage}
-            onImportCSV={handleImportCSV}
-            onDownloadTemplate={handleDownloadTemplate}
           />
         )}
         {view === 'map' && <MapView activities={activities} />}
@@ -318,8 +359,6 @@ const App: React.FC = () => {
             onUpdateTicket={handleUpdateTicket}
             onDeleteTicket={handleDeleteTicket}
             onPreviewImage={setPreviewImage}
-            onImportCSV={handleImportWalletCSV}
-            onDownloadTemplate={handleDownloadWalletTemplate}
           />
         )}
       </div>

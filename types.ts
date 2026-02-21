@@ -36,7 +36,7 @@ export interface Expense {
   category: ActivityType;
   description: string;
   date: string; // ISO String or YYYY-MM-DD
-  exchangeRateToBase: number; 
+  exchangeRateToBase: number;
   notes?: string;
 }
 
@@ -45,7 +45,7 @@ export interface Ticket {
   type: 'Hotel' | 'Flight' | 'Train' | 'Event';
   title: string;
   date: string;
-  qrCodeUrl?: string; 
+  qrCodeUrl?: string;
   details: string;
   files?: string[]; // Changed to array for multiple attachments
   notes?: string;
@@ -56,6 +56,15 @@ export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
   isThinking?: boolean;
+}
+
+export interface POILocation {
+  id: string;
+  title: string;
+  description?: string;
+  location: { lat: number; lng: number };
+  category?: string;
+  address?: string;
 }
 
 export type ViewState = 'itinerary' | 'map' | 'expenses' | 'wallet';

@@ -1,4 +1,4 @@
-import { Activity, Expense, Ticket } from '../types';
+import { Activity, Expense, POILocation, Ticket } from '../types';
 
 const GAS_URL = import.meta.env.VITE_GAS_URL;
 
@@ -6,6 +6,7 @@ export interface SheetData {
     plane: Activity[];
     spend: Expense[];
     wallet: Ticket[];
+    poi?: POILocation[];
 }
 
 export const sheetsService = {
@@ -35,7 +36,7 @@ export const sheetsService = {
         }
     },
 
-    async syncItem(type: 'plane' | 'spend' | 'wallet', action: 'set' | 'delete', data: any) {
+    async syncItem(type: 'plane' | 'spend' | 'wallet' | 'poi', action: 'set' | 'delete', data: any) {
         if (!GAS_URL) return;
         try {
             await fetch(GAS_URL, {

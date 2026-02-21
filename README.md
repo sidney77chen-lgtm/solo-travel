@@ -59,6 +59,7 @@ npm run dev
 | **`plane`** | `id`, `date`, `time`, `title`, `description`, `type`, `location_lat`, `location_lng`, `address`, `isCompleted`, `notes`, `priceEstimate`, `currency`, `images` |
 | **`spend`** | `id`, `amount`, `currency`, `category`, `description`, `date`, `exchangeRateToBase`, `notes` |
 | **`wallet`** | `id`, `type`, `title`, `date`, `qrCodeUrl`, `details`, `files`, `notes` |
+| **`poi`** | `id`, `title`, `description`, `location_lat`, `location_lng`, `category`, `address` |
 
 ### 第二步：配置 Google Apps Script (GAS)
 1. 在試算表中點選 **延伸功能 > Apps Script**。
@@ -68,7 +69,7 @@ npm run dev
 function doGet() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const data = {};
-  ['plane', 'spend', 'wallet'].forEach(name => {
+  ['plane', 'spend', 'wallet', 'poi'].forEach(name => {
     const sheet = ss.getSheetByName(name);
     if (!sheet) return;
     const values = sheet.getDataRange().getValues();

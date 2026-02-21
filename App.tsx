@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ViewState, Activity, ActivityType, Currency, Expense, Ticket } from './types';
+import { ViewState, Activity, ActivityType, Currency, Expense, Ticket, POILocation } from './types';
 import Navigation from './components/Navigation';
 import ItineraryView from './components/ItineraryView';
 import ExpenseTracker from './components/ExpenseTracker';
@@ -103,6 +103,7 @@ const App: React.FC = () => {
   const [activities, setActivities] = useState<Activity[]>(INITIAL_ACTIVITIES);
   const [expenses, setExpenses] = useState<Expense[]>(INITIAL_EXPENSES);
   const [tickets, setTickets] = useState<Ticket[]>(INITIAL_TICKETS);
+  const [pois, setPois] = useState<POILocation[]>([]);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -117,6 +118,7 @@ const App: React.FC = () => {
         if (data.plane) setActivities(data.plane);
         if (data.spend) setExpenses(data.spend);
         if (data.wallet) setTickets(data.wallet);
+        if (data.poi) setPois(data.poi);
       }
       setIsLoading(false);
     };
@@ -343,7 +345,7 @@ const App: React.FC = () => {
             onPreviewImage={setPreviewImage}
           />
         )}
-        {view === 'map' && <MapView activities={activities} />}
+        {view === 'map' && <MapView activities={activities} pois={pois} />}
         {view === 'expenses' && (
           <ExpenseTracker
             expenses={expenses}

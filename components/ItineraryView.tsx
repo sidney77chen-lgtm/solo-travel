@@ -43,18 +43,16 @@ const LiveClock = () => {
 const formatTime = (timeStr: string) => {
     if (!timeStr) return '';
 
-    // Handle ISO strings from Google Sheets (e.g. 1899-12-30T01:00:00.000Z)
-    if (timeStr.includes('T')) {
-        const date = new Date(timeStr);
-        return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase();
+    // Handle HH:mm strings (already sanitized in App.tsx)
+    if (timeStr.includes(':')) {
+        const [hours, minutes] = timeStr.split(':');
+        const h = parseInt(hours, 10);
+        const ampm = h >= 12 ? 'pm' : 'am';
+        const displayH = h % 12 || 12;
+        return `${displayH}:${minutes} ${ampm}`;
     }
 
-    // Handle HH:mm strings
-    const [hours, minutes] = timeStr.split(':');
-    const h = parseInt(hours, 10);
-    const ampm = h >= 12 ? 'pm' : 'am';
-    const displayH = h % 12 || 12;
-    return `${ampm} ${displayH}:${minutes}`;
+    return timeStr;
 };
 
 const getWeatherForDate = (date: string) => {
@@ -131,8 +129,12 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ activities, onToggleCompl
 
     const dailyActivities = useMemo(() => {
         return activities
-            .filter(a => a.date === selectedDate)
-            .sort((a, b) => a.time.localeCompare(b.time));
+            .filter(a => {
+                const aDate = typeof a.date === 'string' && a.date.includes('T') ? a.date.split('T')[0] : a.date;
+                const sDate = selectedDate.includes('T') ? selectedDate.split('T')[0] : selectedDate;
+                return aDate === sDate;
+            })
+            .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
     }, [activities, selectedDate]);
 
     const openGoogleMaps = (activity: Activity) => {
@@ -369,21 +371,21 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ activities, onToggleCompl
                                         />
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="relative">
                                             <label className="block text-xs text-gray-500 uppercase font-black tracking-wider mb-2">Date</label>
                                             <input
                                                 type="date"
-                                                className="w-full bg-blue-50 p-3 rounded-xl border-2 border-pop-dark font-bold"
+                                                className="w-full bg-blue-50 p-3 rounded-xl border-2 border-pop-dark font-bold relative z-10"
                                                 value={editForm.date}
                                                 onChange={e => setEditForm({ ...editForm, date: e.target.value })}
                                             />
                                         </div>
-                                        <div>
+                                        <div className="relative">
                                             <label className="block text-xs text-gray-500 uppercase font-black tracking-wider mb-2">Time</label>
                                             <input
                                                 type="time"
-                                                className="w-full bg-blue-50 p-3 rounded-xl border-2 border-pop-dark font-bold"
+                                                className="w-full bg-blue-50 p-3 rounded-xl border-2 border-pop-dark font-bold relative z-10"
                                                 value={editForm.time}
                                                 onChange={e => setEditForm({ ...editForm, time: e.target.value })}
                                             />
@@ -392,7 +394,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ activities, onToggleCompl
 
                                     <div>
                                         <label className="block text-xs text-gray-500 uppercase font-black tracking-wider mb-2">Type</label>
-                                        <div className="grid grid-cols-2 gap-2">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                             {Object.values(ActivityType).map(t => (
                                                 <button
                                                     key={t}
@@ -419,7 +421,7 @@ const ItineraryView: React.FC<ItineraryViewProps> = ({ activities, onToggleCompl
                                         />
                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-xs text-gray-500 uppercase font-black tracking-wider mb-2">Cost (JPY)</label>
                                             <input

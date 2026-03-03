@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ViewState, Activity, ActivityType, Currency, Expense, Ticket, POILocation } from './types';
 import Navigation from './components/Navigation';
 import ItineraryView from './components/ItineraryView';
@@ -9,94 +9,10 @@ import AIChat from './components/AIChat';
 import { X, CloudSync, Loader2 } from 'lucide-react';
 import { sheetsService } from './services/sheetsService';
 
-// Mock Data
-const INITIAL_ACTIVITIES: Activity[] = [
-  {
-    id: '1',
-    date: '2023-10-24',
-    time: '09:00',
-    title: 'Fushimi Inari Taisha',
-    description: 'Walk through the thousands of vermilion torii gates. Best to go early to avoid crowds.',
-    type: ActivityType.SIGHTSEEING,
-    isCompleted: true,
-    location: { lat: 34.9671, lng: 135.7727 },
-    address: '68 Fukakusa Yabunouchicho, Fushimi Ward, Kyoto',
-    currency: Currency.JPY,
-    priceEstimate: 0,
-    notes: 'Bring water!',
-    images: []
-  },
-  {
-    id: '2',
-    date: '2023-10-24',
-    time: '12:30',
-    title: 'Lunch at Nishiki Market',
-    description: 'Explore "Kyoto\'s Kitchen". Try the soy milk donuts and fresh sashmi on a stick.',
-    type: ActivityType.FOOD,
-    isCompleted: false,
-    location: { lat: 35.0050, lng: 135.7649 },
-    address: 'Nishikikoji-dori, Nakagyo Ward, Kyoto',
-    currency: Currency.JPY,
-    priceEstimate: 2000,
-    images: []
-  },
-  {
-    id: '3',
-    date: '2023-10-24',
-    time: '14:30',
-    title: 'Kinkaku-ji (Golden Pavilion)',
-    description: 'Zen Buddhist temple with top two floors completely covered in gold leaf.',
-    type: ActivityType.SIGHTSEEING,
-    isCompleted: false,
-    location: { lat: 35.0394, lng: 135.7292 },
-    address: '1 Kinkakujicho, Kita Ward, Kyoto',
-    currency: Currency.JPY,
-    priceEstimate: 500,
-    images: []
-  }
-];
-
-const INITIAL_EXPENSES: Expense[] = [
-  {
-    id: '1',
-    amount: 500,
-    currency: Currency.JPY,
-    category: ActivityType.TRANSPORT,
-    description: 'Train to Fushimi Inari',
-    date: '2023-10-24',
-    exchangeRateToBase: 1
-  },
-  {
-    id: '2',
-    amount: 1200,
-    currency: Currency.JPY,
-    category: ActivityType.FOOD,
-    description: 'Matcha Ice Cream & Snacks',
-    date: '2023-10-24',
-    exchangeRateToBase: 1
-  }
-];
-
-const INITIAL_TICKETS: Ticket[] = [
-  {
-    id: '1',
-    type: 'Flight',
-    title: 'JAL Flight JL006',
-    date: 'Oct 23, 11:00 AM',
-    details: 'Seat 42A • Tokyo (HND) to New York (JFK)',
-    notes: 'Vegetarian meal requested',
-    files: []
-  },
-  {
-    id: '2',
-    type: 'Hotel',
-    title: 'Ace Hotel Kyoto',
-    date: 'Oct 24 - Oct 28',
-    details: 'Standard King • Confirmation #8839201',
-    notes: 'Check-in at 3PM',
-    files: []
-  }
-];
+// Initial Mock Data (Cleared for Bangkok default)
+const INITIAL_ACTIVITIES: Activity[] = [];
+const INITIAL_EXPENSES: Expense[] = [];
+const INITIAL_TICKETS: Ticket[] = [];
 
 const App: React.FC = () => {
   const [view, setView] = useState<ViewState>('itinerary');
@@ -110,11 +26,86 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   // --- Sync Effects ---
-  React.useEffect(() => {
-    const loadData = async () => {
+  // Define a type for the raw data fetched from sheetsService
+  interface SheetData {
+    plane?: Activity[];
+    spend?: Expense[];
+    wallet?: Ticket[];
+    poi?: POILocation[];
+  }
+
+  // Cleanup and normalize data from Google Sheets
+  const sanitizeSheetData = (data: SheetData): SheetData => {
+    const sanitizeDate = (d: any) => {
+      if (!d) return new Date().toISOString().split('T')[0];
+      const date = new Date(d);
+      if (isNaN(date.getTime())) return String(d);
+      const year = date.getFullYear();
+      if (year < 1970) return String(d).split('T')[0];
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    };
+
+    const sanitizeTime = (t: any) => {
+      if (!t) return '09:00';
+      if (typeof t === 'string' && t.includes('T')) {
+        const date = new Date(t);
+        return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+      }
+      return String(t);
+    };
+
+    const usedIds = new Set<string>();
+    const makeUnique = (id: any, fallback: string) => {
+      // Ensure id is a string and not just "1" or "true"
+      let baseId = String(id || '').trim();
+      if (!baseId || baseId === 'undefined' || baseId === 'null') {
+        baseId = fallback;
+      }
+
+      let uniqueId = baseId;
+      let count = 1;
+      while (usedIds.has(uniqueId)) {
+        uniqueId = `${baseId}-${count}`;
+        count++;
+      }
+      usedIds.add(uniqueId);
+      return uniqueId;
+    };
+
+    return {
+      plane: (data.plane || []).map((a, i) => {
+        const sanitizedId = makeUnique(a.id, `act-${i}`);
+        return {
+          ...a,
+          id: sanitizedId,
+          date: sanitizeDate(a.date),
+          time: sanitizeTime(a.time),
+          isCompleted: String(a.isCompleted).toLowerCase() === 'true' || a.isCompleted === true
+        };
+      }),
+      spend: (data.spend || []).map((e, i) => ({
+        ...e,
+        id: makeUnique(e.id, `exp-${i}`)
+      })),
+      wallet: (data.wallet || []).map((t, i) => ({
+        ...t,
+        id: makeUnique(t.id, `tk-${i}`)
+      })),
+      poi: (data.poi || []).map((p, i) => ({
+        ...p,
+        id: makeUnique(p.id, `poi-${i}`)
+      }))
+    };
+  };
+
+  useEffect(() => {
+    const fetchData = async () => {
       setIsLoading(true);
-      const data = await sheetsService.fetchAllData();
-      if (data) {
+      const rawData = await sheetsService.fetchAllData();
+      if (rawData) {
+        const data = sanitizeSheetData(rawData);
         if (data.plane) setActivities(data.plane);
         if (data.spend) setExpenses(data.spend);
         if (data.wallet) setTickets(data.wallet);
@@ -122,7 +113,7 @@ const App: React.FC = () => {
       }
       setIsLoading(false);
     };
-    loadData();
+    fetchData();
   }, []);
 
   // --- Handlers ---

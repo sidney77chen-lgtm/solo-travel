@@ -62,12 +62,14 @@ const MapView: React.FC<MapViewProps> = ({ activities, pois = [] }) => {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [isFindingLocation, setIsFindingLocation] = useState(false);
 
-  // Center map on first activity or fallback to a default (e.g. Kyoto as before)
+  // Center map on first activity, first POI, or fallback to Bangkok
   const initialCenter: [number, number] = activities.length > 0 && activities[0].location
     ? [activities[0].location.lat, activities[0].location.lng]
-    : [35.0116, 135.7681]; // Kyoto coordinates
+    : pois.length > 0 && pois[0].location
+      ? [pois[0].location.lat, pois[0].location.lng]
+      : [13.7563, 100.5018]; // Bangkok coordinates
 
-  const handleFindMe = () => {
+  const handleFindMe = (isAuto = false) => {
     setIsFindingLocation(true);
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -77,16 +79,28 @@ const MapView: React.FC<MapViewProps> = ({ activities, pois = [] }) => {
         },
         (error) => {
           console.error("Geolocation error:", error);
-          alert("Unable to find your location. Please check browser permissions.");
+          if (!isAuto) {
+            alert("Unable to find your location. Please check browser permissions.");
+          }
           setIsFindingLocation(false);
         },
-        { enableHighAccuracy: true }
+        { enableHighAccuracy: true, timeout: 5000 }
       );
     } else {
-      alert("Geolocation is not supported by your browser.");
+      if (!isAuto) {
+        alert("Geolocation is not supported by your browser.");
+      }
       setIsFindingLocation(false);
     }
   };
+
+  // Auto-find location on mount with a small delay to avoid browser blocking
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleFindMe(true);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div className="relative w-full h-full bg-blue-100 animate-fade-in overflow-hidden">

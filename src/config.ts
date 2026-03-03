@@ -1,6 +1,6 @@
 export const APP_CONFIG = {
     // Destination name displayed in weather widgets and headers
-    DESTINATION: 'ChiangMai',
+    DESTINATION: 'Bangkok',
 
     // Base currency for expense tracking (e.g., 'JPY', 'USD', 'EUR')
     BASE_CURRENCY: 'THB',

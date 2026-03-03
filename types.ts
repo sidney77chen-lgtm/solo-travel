@@ -62,7 +62,7 @@ export interface POILocation {
   id: string;
   title: string;
   description?: string;
-  location: { lat: number; lng: number };
+  location?: { lat: number; lng: number };
   category?: string;
   address?: string;
 }

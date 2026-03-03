@@ -158,24 +158,25 @@ const App: React.FC = () => {
         if (data.poi) setPois(data.poi);
 
         // --- Asynchronous Geocoding Fallback ---
-        // Find items that have address but no location
-        const needsGeocode = [
-          ...(data.plane || []).filter(a => !a.location && a.address),
-          ...(data.poi || []).filter(p => !p.location && p.address)
-        ];
+        const actNeeds = (data.plane || []).filter(a => !a.location && a.address);
+        const poiNeeds = (data.poi || []).filter(p => !p.location && p.address);
 
-        if (needsGeocode.length > 0) {
-          console.log(`Found ${needsGeocode.length} items needing geocoding...`);
+        if (actNeeds.length > 0 || poiNeeds.length > 0) {
+          console.log(`Geocoding needs: ${actNeeds.length} activities, ${poiNeeds.length} POIs`);
 
-          for (const item of needsGeocode) {
-            const loc = await geocodeAddress(item.address!);
+          for (const a of actNeeds) {
+            const loc = await geocodeAddress(a.address!);
             if (loc) {
-              // Update Activities
-              setActivities(prev => prev.map(a => a.id === item.id ? { ...a, location: loc } : a));
-              // Update POIs (sharing the same check)
-              setPois(prev => prev.map(p => p.id === item.id ? { ...p, location: loc } : p));
+              setActivities(prev => prev.map(item => item.id === a.id ? { ...item, location: loc } : item));
             }
-            // Small delay to respect Nominatim usage policy
+            await new Promise(r => setTimeout(r, 1000));
+          }
+
+          for (const p of poiNeeds) {
+            const loc = await geocodeAddress(p.address!);
+            if (loc) {
+              setPois(prev => prev.map(item => item.id === p.id ? { ...item, location: loc } : item));
+            }
             await new Promise(r => setTimeout(r, 1000));
           }
         }

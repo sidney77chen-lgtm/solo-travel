@@ -74,12 +74,38 @@ const App: React.FC = () => {
       return uniqueId;
     };
 
+    const sanitizeLocation = (item: any) => {
+      // 1. Check if location object exists (already structured)
+      if (item.location && typeof item.location === 'object' && item.location.lat && item.location.lng) {
+        return {
+          lat: parseFloat(String(item.location.lat)),
+          lng: parseFloat(String(item.location.lng))
+        };
+      }
+      if (item.location_lat !== undefined && item.location_lng !== undefined) {
+        const latStr = String(item.location_lat || '').trim();
+        const lngStr = String(item.location_lng || '').trim();
+        if (latStr && lngStr) {
+          const lat = parseFloat(latStr);
+          const lng = parseFloat(lngStr);
+          if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
+        }
+      }
+      // 3. Fallback: check if 'location' is a comma-separated string
+      if (typeof item.location === 'string' && item.location.includes(',')) {
+        const [lat, lng] = item.location.split(',').map(s => parseFloat(s.trim()));
+        if (!isNaN(lat) && !isNaN(lng)) return { lat, lng };
+      }
+      return undefined;
+    };
+
     return {
       plane: (data.plane || []).map((a, i) => {
         const sanitizedId = makeUnique(a.id, `act-${i}`);
         return {
           ...a,
           id: sanitizedId,
+          location: sanitizeLocation(a),
           date: sanitizeDate(a.date),
           time: sanitizeTime(a.time),
           isCompleted: String(a.isCompleted).toLowerCase() === 'true' || a.isCompleted === true
@@ -95,21 +121,64 @@ const App: React.FC = () => {
       })),
       poi: (data.poi || []).map((p, i) => ({
         ...p,
-        id: makeUnique(p.id, `poi-${i}`)
+        id: makeUnique(p.id, `poi-${i}`),
+        location: sanitizeLocation(p)
       }))
     };
   };
 
   useEffect(() => {
+    const geocodeAddress = async (address: string): Promise<{ lat: number; lng: number } | undefined> => {
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
+        const response = await fetch(url, { headers: { 'User-Agent': 'SoloTravelPlannerApp' } });
+        const data = await response.json();
+        if (data && data.length > 0) {
+          return {
+            lat: parseFloat(data[0].lat),
+            lng: parseFloat(data[0].lon)
+          };
+        }
+      } catch (error) {
+        console.error('Geocoding error for address:', address, error);
+      }
+      return undefined;
+    };
+
     const fetchData = async () => {
       setIsLoading(true);
       const rawData = await sheetsService.fetchAllData();
       if (rawData) {
         const data = sanitizeSheetData(rawData);
+
+        // Final state updates
         if (data.plane) setActivities(data.plane);
         if (data.spend) setExpenses(data.spend);
         if (data.wallet) setTickets(data.wallet);
         if (data.poi) setPois(data.poi);
+
+        // --- Asynchronous Geocoding Fallback ---
+        // Find items that have address but no location
+        const needsGeocode = [
+          ...(data.plane || []).filter(a => !a.location && a.address),
+          ...(data.poi || []).filter(p => !p.location && p.address)
+        ];
+
+        if (needsGeocode.length > 0) {
+          console.log(`Found ${needsGeocode.length} items needing geocoding...`);
+
+          for (const item of needsGeocode) {
+            const loc = await geocodeAddress(item.address!);
+            if (loc) {
+              // Update Activities
+              setActivities(prev => prev.map(a => a.id === item.id ? { ...a, location: loc } : a));
+              // Update POIs (sharing the same check)
+              setPois(prev => prev.map(p => p.id === item.id ? { ...p, location: loc } : p));
+            }
+            // Small delay to respect Nominatim usage policy
+            await new Promise(r => setTimeout(r, 1000));
+          }
+        }
       }
       setIsLoading(false);
     };
@@ -336,7 +405,11 @@ const App: React.FC = () => {
             onPreviewImage={setPreviewImage}
           />
         )}
-        {view === 'map' && <MapView activities={activities} pois={pois} />}
+        {view === 'map' && (
+          <div className="w-full h-full">
+            <MapView activities={activities} pois={pois} />
+          </div>
+        )}
         {view === 'expenses' && (
           <ExpenseTracker
             expenses={expenses}

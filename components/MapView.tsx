@@ -3,6 +3,7 @@ import { Activity, POILocation } from '../types';
 import { MapPin, Navigation as NavIcon, Star } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 // Fix for default Leaflet icons in React/Webpack/Vite
 // @ts-ignore
@@ -63,11 +64,27 @@ const MapView: React.FC<MapViewProps> = ({ activities, pois = [] }) => {
   const [isFindingLocation, setIsFindingLocation] = useState(false);
 
   // Center map on first activity, first POI, or fallback to Bangkok
-  const initialCenter: [number, number] = activities.length > 0 && activities[0].location
-    ? [activities[0].location.lat, activities[0].location.lng]
-    : pois.length > 0 && pois[0].location
-      ? [pois[0].location.lat, pois[0].location.lng]
-      : [13.7563, 100.5018]; // Bangkok coordinates
+  const getInitialCenter = (): [number, number] => {
+    const firstActivityWithLoc = activities.find(a =>
+      a.location &&
+      typeof a.location.lat === 'number' && !isNaN(a.location.lat) &&
+      typeof a.location.lng === 'number' && !isNaN(a.location.lng)
+    );
+    if (firstActivityWithLoc?.location) {
+      return [firstActivityWithLoc.location.lat, firstActivityWithLoc.location.lng];
+    }
+    const firstPoiWithLoc = pois.find(p =>
+      p.location &&
+      typeof p.location.lat === 'number' && !isNaN(p.location.lat) &&
+      typeof p.location.lng === 'number' && !isNaN(p.location.lng)
+    );
+    if (firstPoiWithLoc?.location) {
+      return [firstPoiWithLoc.location.lat, firstPoiWithLoc.location.lng];
+    }
+    return [13.7563, 100.5018]; // Bangkok fallback
+  };
+
+  const initialCenter = getInitialCenter();
 
   const handleFindMe = (isAuto = false) => {
     setIsFindingLocation(true);
@@ -127,48 +144,56 @@ const MapView: React.FC<MapViewProps> = ({ activities, pois = [] }) => {
         )}
 
         {/* Activity Markers */}
-        {activities.map((activity) => activity.location && (
-          <Marker
-            key={activity.id}
-            position={[activity.location.lat, activity.location.lng]}
-            icon={ACTIVITY_ICON}
-          >
-            <Popup>
-              <div className="p-1">
-                <div className="font-bold text-pop-blue">{activity.title}</div>
-                <div className="text-xs text-gray-500 mt-1">{activity.time}</div>
-                <p className="text-sm mt-2">{activity.description}</p>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        {activities.map((activity) => (
+          activity.location &&
+          typeof activity.location.lat === 'number' && !isNaN(activity.location.lat) &&
+          typeof activity.location.lng === 'number' && !isNaN(activity.location.lng)
+        ) && (
+            <Marker
+              key={activity.id}
+              position={[activity.location.lat, activity.location.lng]}
+              icon={ACTIVITY_ICON}
+            >
+              <Popup>
+                <div className="p-1">
+                  <div className="font-bold text-pop-blue">{activity.title || 'Activity'}</div>
+                  <div className="text-xs text-gray-500 mt-1">{activity.time}</div>
+                  <p className="text-sm mt-2">{activity.description}</p>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
 
         {/* POI Markers */}
         {pois.map((poi) => (
-          <Marker
-            key={poi.id}
-            position={[poi.location.lat, poi.location.lng]}
-            icon={POI_ICON}
-          >
-            <Popup>
-              <div className="p-1">
-                <div className="font-bold text-pop-yellow flex items-center gap-1">
-                  <Star size={14} fill="currentColor" /> {poi.title}
+          poi.location &&
+          typeof poi.location.lat === 'number' && !isNaN(poi.location.lat) &&
+          typeof poi.location.lng === 'number' && !isNaN(poi.location.lng)
+        ) && (
+            <Marker
+              key={poi.id}
+              position={[poi.location.lat, poi.location.lng]}
+              icon={POI_ICON}
+            >
+              <Popup>
+                <div className="p-1">
+                  <div className="font-bold text-pop-yellow flex items-center gap-1">
+                    <Star size={14} fill="currentColor" /> {poi.title || 'Spot'}
+                  </div>
+                  {poi.category && <div className="text-xs text-gray-400">{poi.category}</div>}
+                  <p className="text-sm mt-2">{poi.description}</p>
+                  {poi.address && <div className="text-[10px] text-gray-400 mt-2">{poi.address}</div>}
                 </div>
-                {poi.category && <div className="text-xs text-gray-400">{poi.category}</div>}
-                <p className="text-sm mt-2">{poi.description}</p>
-                {poi.address && <div className="text-[10px] text-gray-400 mt-2">{poi.address}</div>}
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+              </Popup>
+            </Marker>
+          ))}
       </MapContainer>
 
       {/* Floating Controls */}
       <div className="absolute top-6 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-4">
         <span className="bg-pop-yellow px-6 py-2 rounded-xl text-xs font-black text-pop-dark border-4 border-pop-dark shadow-pop flex items-center gap-2 -rotate-1">
           <MapPin size={16} className="text-pop-blue" strokeWidth={3} />
-          EXPLORING {activities[0]?.title.toUpperCase() || "WORLD"}
+          EXPLORING {(activities[0]?.title || pois[0]?.title || "Bangkok").toUpperCase()}
         </span>
 
         <button

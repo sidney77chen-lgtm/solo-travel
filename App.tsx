@@ -25,14 +25,8 @@ const App: React.FC = () => {
   const [isSyncing, setIsSyncing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // --- Sync Effects ---
-  // Define a type for the raw data fetched from sheetsService
-  interface SheetData {
-    plane?: Activity[];
-    spend?: Expense[];
-    wallet?: Ticket[];
-    poi?: POILocation[];
-  }
+  // Use the SheetData type from the service for consistency
+  type SheetData = import('./services/sheetsService').SheetData;
 
   // Cleanup and normalize data from Google Sheets
   const sanitizeSheetData = (data: SheetData): SheetData => {
@@ -132,11 +126,11 @@ const App: React.FC = () => {
       try {
         const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`;
         const response = await fetch(url, { headers: { 'User-Agent': 'SoloTravelPlannerApp' } });
-        const data = await response.json();
-        if (data && data.length > 0) {
+        const json = await response.json();
+        if (json && json.length > 0) {
           return {
-            lat: parseFloat(data[0].lat),
-            lng: parseFloat(data[0].lon)
+            lat: parseFloat(String(json[0].lat)),
+            lng: parseFloat(String(json[0].lon))
           };
         }
       } catch (error) {
@@ -149,17 +143,17 @@ const App: React.FC = () => {
       setIsLoading(true);
       const rawData = await sheetsService.fetchAllData();
       if (rawData) {
-        const data = sanitizeSheetData(rawData);
+        const sanitized = sanitizeSheetData(rawData);
 
         // Final state updates
-        if (data.plane) setActivities(data.plane);
-        if (data.spend) setExpenses(data.spend);
-        if (data.wallet) setTickets(data.wallet);
-        if (data.poi) setPois(data.poi);
+        if (sanitized.plane) setActivities(sanitized.plane);
+        if (sanitized.spend) setExpenses(sanitized.spend);
+        if (sanitized.wallet) setTickets(sanitized.wallet);
+        if (sanitized.poi) setPois(sanitized.poi);
 
         // --- Asynchronous Geocoding Fallback ---
-        const actNeeds = (data.plane || []).filter(a => !a.location && a.address);
-        const poiNeeds = (data.poi || []).filter(p => !p.location && p.address);
+        const actNeeds = (sanitized.plane || []).filter(a => !a.location && a.address);
+        const poiNeeds = (sanitized.poi || []).filter(p => !p.location && p.address);
 
         if (actNeeds.length > 0 || poiNeeds.length > 0) {
           console.log(`Geocoding needs: ${actNeeds.length} activities, ${poiNeeds.length} POIs`);
